@@ -10,7 +10,7 @@ public class LeaveHomeState : BaseState
     private GameObject taxisDriver;
 
     private Vector3 carPosition;
-    private const float SLEEPING_TIME = 10;
+    private const float SLEEPING_TIME = 50;
     private float timer = 0;
     private bool isSleeping = true;
 

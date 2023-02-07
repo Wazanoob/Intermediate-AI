@@ -12,6 +12,8 @@ public class GoToDriveState : BaseState
     private GameObject taxisDriver;
     private NavMeshAgent navMeshAgent;
 
+    private FastFood currentFastFood;
+    private int currentParkingSlot;
     private Vector3 drivePosition;
     private Vector3 parkingSlotPosition;
 
@@ -34,26 +36,30 @@ public class GoToDriveState : BaseState
 
         navMeshAgent = taxisCar.GetComponent<NavMeshAgent>();
         navMeshAgent.SetDestination(drivePosition);
+
+        navMeshAgent.speed = 5.0f;
     }
 
     public override void OnUpdate()
     {
-        if (navMeshAgent.remainingDistance <= navMeshAgent.stoppingDistance)
+        if (Vector3.Distance(taxisCar.transform.position, navMeshAgent.destination) <= navMeshAgent.stoppingDistance)
         {
-            // Random Delay
             waitTimer += Time.deltaTime;
 
             if (!isEating && waitTimer >= TIME_TO_ORDER)
             {
                 isEating = true;
                 waitTimer = 0;
-                navMeshAgent.SetDestination(parkingSlotPosition); 
+                navMeshAgent.SetDestination(parkingSlotPosition);
             }
             else if (isEating && waitTimer >= TIME_TO_EAT)
             {
+                currentFastFood.isSlotAvailable[currentParkingSlot] = true;
                 OnStateEnd();
             }
         }
+
+        CheckCollision();
     }
 
     public override void OnStateEnd()
@@ -64,7 +70,6 @@ public class GoToDriveState : BaseState
         {
             nextStep = new GoHomeState();
             taxisStateMachine.OnEnd(nextStep);
-            return;
         }
 
         taxisStateMachine.driveCount++;
@@ -75,12 +80,12 @@ public class GoToDriveState : BaseState
     private void GetRandomRestaurant()
     {
         bool succed = false;
-
+        int attempt = 0;
         do
         {
             GameObject[] Restaurants = GameObject.FindGameObjectsWithTag("FastFood");
             int random = Random.Range(0, Restaurants.Length);
-            
+
             FastFood fastFood = Restaurants[random].GetComponent<FastFood>();
 
             for (int i = 0; i < fastFood.isSlotAvailable.Length; i++)
@@ -89,11 +94,50 @@ public class GoToDriveState : BaseState
                 {
                     drivePosition = fastFood.GetDriveThrough().position;
                     parkingSlotPosition = fastFood.GetParkingSlot(i).transform.position;
+                    currentFastFood = fastFood;
+                    currentParkingSlot = i;
                     fastFood.isSlotAvailable[i] = false;
                     succed = true;
+                    return;
                 }
             }
 
+            attempt++;
+            if (attempt >= 10)
+            {
+                return;
+            }
         } while(!succed);
+    }
+
+    private void CheckCollision()
+    {
+        RaycastHit hit;
+
+        Vector3 positionOffset = new Vector3(taxisCar.transform.position.x, taxisCar.transform.position.y + 0.5f, taxisCar.transform.position.z);
+
+        // Does the ray intersect any objects excluding the player layer
+        if (Physics.Raycast(positionOffset, taxisCar.transform.TransformDirection(Vector3.forward), out hit, 4.0f))
+        {
+            Debug.DrawRay(positionOffset, taxisCar.transform.TransformDirection(Vector3.forward) * hit.distance, Color.yellow);
+
+            if (hit.transform.CompareTag("Car"))
+            {
+                Debug.Log("CARCRASH");
+                Debug.DrawRay(positionOffset, taxisCar.transform.TransformDirection(Vector3.forward) * hit.distance, Color.red);
+
+                if(hit.transform.GetComponent<NavMeshAgent>().velocity !=Vector3.zero) 
+                {
+                    navMeshAgent.speed = 0.5f;
+                }else
+                {
+                    navMeshAgent.speed = 0.0f;
+                }
+            }
+        }
+        else
+        {
+            navMeshAgent.speed = 5.0f;
+        }
     }
 }

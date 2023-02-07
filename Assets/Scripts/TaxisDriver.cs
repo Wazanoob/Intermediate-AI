@@ -8,4 +8,5 @@ public class TaxisDriver : MonoBehaviour
     public Transform homeLocation;
     public Transform driveLocation;
     public Transform driverSit;
+    public Transform passengerSit;
 }
