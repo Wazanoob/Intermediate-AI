@@ -42,14 +42,14 @@ public class GoToClientState : BaseState
     {
         if (!clientOnBoard && Vector3.Distance(taxisCar.transform.position, clientPosition) <= 10.0f)
         {
-            if (navMeshAgent.velocity.magnitude < 0.1f) 
+            if (navMeshAgent.velocity.magnitude < 0.2f) 
             {
                 TaxisDriver taxis = taxisDriver.GetComponent<TaxisDriver>();
                 Client client = myClient.GetComponent<Client>();
 
                 client.SetClientDestination(taxis.passengerSit.position);
 
-                if (Vector3.Distance(taxis.passengerSit.position, myClient.transform.position) <= 1.5f)
+                if (Vector3.Distance(taxis.passengerSit.position, myClient.transform.position) <= 1.25f)
                 {
                     Vector3 newDestination;
                     RandomPoint(client.randomDestination, 6.0f, out newDestination);
