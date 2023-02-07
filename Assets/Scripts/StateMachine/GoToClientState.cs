@@ -30,6 +30,7 @@ public class GoToClientState : BaseState
         if (navMeshAgent.remainingDistance <= navMeshAgent.stoppingDistance)
         {
             OnStateEnd();
+            Debug.Log("Hm");
         }
     }
 
@@ -46,7 +47,7 @@ public class GoToClientState : BaseState
     {
         GameObject[] Clients = GameObject.FindGameObjectsWithTag("Client");
         int random = Random.Range(0, Clients.Length);
-
+        Debug.Log(random + " / " + Clients.Length);
         client = Clients[random];
     }
 }
